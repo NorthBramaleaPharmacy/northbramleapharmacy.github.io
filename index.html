@@ -1,1 +1,502 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBP Pharmacy — Delivery Schedule</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1F2937;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #E5E7EB;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:#1D9E75;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.logo-text{font-size:15px;font-weight:600}
+.logo-sub{font-size:11px;color:#6B7280}
+.container{max-width:1200px;margin:0 auto;padding:1.5rem}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:4px;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tab{padding:8px 18px;border-radius:8px;border:none;background:transparent;font-size:13px;cursor:pointer;color:#6B7280;font-weight:500;display:flex;align-items:center;gap:6px;transition:all .15s}
+.tab.active{background:#1D9E75;color:#fff}
+.tab:hover:not(.active){background:#F3F4F6;color:#374151}
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem}
+.stat{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat-label{font-size:11px;font-weight:500;color:#6B7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.stat-val{font-size:26px;font-weight:600}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid #E5E7EB;background:#fff;font-size:13px;cursor:pointer;color:#374151;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:all .15s}
+.btn:hover{background:#F9FAFB}
+.btn-primary{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.btn-primary:hover{background:#0F6E56;border-color:#0F6E56}
+.btn-blue{background:#2563eb;border-color:#2563eb;color:#fff}
+.btn-blue:hover{background:#1d4ed8}
+.btn-blue.done{background:#9CA3AF;border-color:#9CA3AF;cursor:default;pointer-events:none}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-red{background:#FEF2F2;border-color:#fca5a5;color:#dc2626}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+label{font-size:12px;font-weight:500;color:#4B5563;display:block;margin-bottom:4px}
+input,select,textarea{width:100%;padding:8px 11px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;background:#fff;color:#1F2937;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+textarea{resize:vertical;min-height:64px}
+.cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.cal-month{font-size:16px;font-weight:600;flex:1;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-hdr{font-size:11px;font-weight:600;text-align:center;color:#6B7280;padding:6px 0;text-transform:uppercase;letter-spacing:.04em}
+.cal-day{min-height:88px;border:1px solid #E5E7EB;border-radius:8px;padding:5px 6px;background:#fff}
+.cal-day.today{border-color:#1D9E75;border-width:2px}
+.cal-day.other{background:#F9FAFB}
+.cal-num{font-size:11px;font-weight:500;color:#9CA3AF;margin-bottom:3px}
+.cal-day.today .cal-num{color:#1D9E75;font-weight:700}
+.pill{font-size:10px;font-weight:500;background:#E1F5EE;color:#0F6E56;padding:2px 6px;border-radius:20px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;border:none;width:100%;text-align:left}
+.pill:hover{background:#9FE1CB}
+.pill.pay{background:#FAEEDA;color:#854F0B}
+.pill.pay:hover{background:#FAC775}
+.ptable{width:100%;border-collapse:collapse}
+.ptable th{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;text-align:left;border-bottom:1px solid #E5E7EB}
+.ptable td{font-size:13px;padding:10px 12px;border-bottom:1px solid #F3F4F6;vertical-align:middle}
+.ptable tr:last-child td{border-bottom:none}
+.ptable tr:hover td{background:#F9FAFB}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.bw{background:#DCFCE7;color:#166534}
+.bb{background:#DBEAFE;color:#1e40af}
+.bm{background:#FAEEDA;color:#854F0B}
+.dday{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;padding:10px 0 6px;border-bottom:1px solid #F3F4F6;margin-bottom:4px}
+.drow{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:8px;margin-bottom:3px;background:#F9FAFB;border:1px solid #F3F4F6}
+.dname{font-weight:600;font-size:13px}
+.ddetail{font-size:11px;color:#6B7280;margin-top:1px}
+.dpay{font-size:11px;color:#854F0B;font-weight:500}
+.pushed-badge{font-size:11px;background:#DCFCE7;color:#166534;padding:3px 9px;border-radius:20px;font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#fff;border-radius:12px;padding:1.5rem;width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:1.25rem;padding-top:1rem;border-top:1px solid #E5E7EB}
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1F2937;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+#toast.show{display:block}
+#toast.err{background:#dc2626}
+.empty{text-align:center;padding:3rem 1rem;color:#9CA3AF}
+.empty i{font-size:40px;display:block;margin-bottom:.75rem}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-truck-delivery"></i></div>
+    <div><div class="logo-text">NBP Pharmacy Deliveries</div><div class="logo-sub">Recurring schedule manager</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:11px;background:#DCFCE7;color:#166534;padding:3px 10px;border-radius:20px;font-weight:500"><i class="ti ti-plug-connected"></i> Detrack connected</span>
+    <button class="btn btn-primary" onclick="openAdd()"><i class="ti ti-plus"></i> Add patient</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('cal',this)"><i class="ti ti-calendar"></i> Calendar</button>
+    <button class="tab" onclick="switchTab('pts',this)"><i class="ti ti-users"></i> Patients</button>
+    <button class="tab" onclick="switchTab('dtk',this)"><i class="ti ti-send"></i> Send to Detrack</button>
+  </div>
+  <div id="tab-cal"></div>
+  <div id="tab-pts" style="display:none"></div>
+  <div id="tab-dtk" style="display:none"></div>
+</div>
+
+<div id="modals"></div>
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const DETRACK_KEY = 'Ud58373b528d0c8894e0ede34837dce000a86d744f75f5385';
+const DETRACK_URL = 'https://app.detrack.com/api/v2/dn/jobs';
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// ── STATE ─────────────────────────────────────────────────────
+let patients = JSON.parse(localStorage.getItem('nbp_p') || '[]');
+let pushed   = JSON.parse(localStorage.getItem('nbp_d') || '{}');
+let calMonth = new Date().getMonth();
+let calYear  = new Date().getFullYear();
+
+function save() {
+  localStorage.setItem('nbp_p', JSON.stringify(patients));
+  localStorage.setItem('nbp_d', JSON.stringify(pushed));
+}
+
+// ── DATE HELPERS ──────────────────────────────────────────────
+function parseDate(str) {
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function addDays(date, n) {
+  const r = new Date(date);
+  r.setDate(r.getDate() + n);
+  r.setHours(0,0,0,0);
+  return r;
+}
+
+function fmtDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function getDeliveries(patient, from, to) {
+  if (!patient.lastDelivery) return [];
+  const step = patient.freq === 'weekly' ? 7 : patient.freq === 'biweekly' ? 14 : 28;
+  const f = new Date(from); f.setHours(0,0,0,0);
+  const t = new Date(to);   t.setHours(23,59,59,999);
+  let cur = parseDate(patient.lastDelivery);
+  cur = addDays(cur, step);
+  const out = [];
+  let g = 0;
+  while (cur <= t && g++ < 400) {
+    if (cur >= f) out.push(new Date(cur));
+    cur = addDays(cur, step);
+  }
+  return out;
+}
+
+function monthDeliveries() {
+  const f = new Date(calYear, calMonth, 1);
+  const t = new Date(calYear, calMonth+1, 0);
+  const map = {};
+  patients.forEach(p => {
+    getDeliveries(p, f, t).forEach(d => {
+      const k = d.toDateString();
+      if (!map[k]) map[k] = [];
+      map[k].push({p, d});
+    });
+  });
+  return map;
+}
+
+function allMonthDeliveries() {
+  const f = new Date(calYear, calMonth, 1);
+  const t = new Date(calYear, calMonth+1, 0);
+  const out = [];
+  patients.forEach(p => getDeliveries(p, f, t).forEach(d => out.push({p, d})));
+  return out.sort((a,b) => a.d - b.d);
+}
+
+function pushKey(pid, date) {
+  const d = new Date(date);
+  return `${pid}_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+}
+
+// ── DETRACK API ───────────────────────────────────────────────
+function buildPayload(p, date) {
+  const notes = [p.payment ? 'Payment: '+p.payment : '', p.notes ? 'Notes: '+p.notes : ''].filter(Boolean).join(' | ');
+  return {
+    data: {
+      date: fmtDate(new Date(date)),
+      do_number: pushKey(p.id, date),
+      address: p.address,
+      first_name: p.firstName,
+      last_name: p.lastName,
+      phone_number: p.phone || '',
+      remarks: notes,
+      type: 'Delivery'
+    }
+  };
+}
+
+async function callDetrack(payload) {
+  console.log('NBP → Detrack payload:', JSON.stringify(payload));
+  const r = await fetch(DETRACK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-API-KEY': DETRACK_KEY },
+    body: JSON.stringify(payload)
+  });
+  const j = await r.json();
+  console.log('Detrack response:', JSON.stringify(j));
+  return { ok: r.ok || r.status === 201, body: j };
+}
+
+async function pushOne(key, pid, dateISO) {
+  if (pushed[key]) return;
+  const p = patients.find(x => x.id === pid);
+  if (!p) return;
+  const btn = event?.target?.closest('button');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Sending...'; }
+  try {
+    const res = await callDetrack(buildPayload(p, new Date(dateISO)));
+    if (res.ok) {
+      pushed[key] = { at: new Date().toISOString() };
+      save();
+      renderAll();
+      toast(`✓ ${p.firstName} ${p.lastName} pushed to Detrack`);
+    } else {
+      const msg = res.body?.message || res.body?.errors?.[0] || JSON.stringify(res.body);
+      toast('Detrack error: ' + msg, true);
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Push'; }
+    }
+  } catch(e) {
+    toast('Network error: ' + e.message, true);
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Push'; }
+  }
+}
+
+async function pushAll() {
+  const all = allMonthDeliveries().filter(({p,d}) => !pushed[pushKey(p.id,d)]);
+  if (!all.length) { toast('All already pushed!'); return; }
+  toast(`Pushing ${all.length} to Detrack...`);
+  let ok = 0, fail = 0;
+  for (const {p,d} of all) {
+    const key = pushKey(p.id, d);
+    try {
+      const res = await callDetrack(buildPayload(p, d));
+      if (res.ok) { pushed[key] = { at: new Date().toISOString() }; ok++; }
+      else fail++;
+      await new Promise(r => setTimeout(r, 150));
+    } catch { fail++; }
+  }
+  save(); renderAll();
+  toast(`${ok} pushed${fail ? ', '+fail+' failed' : ' successfully'}`, fail > 0);
+}
+
+function resetPushed() {
+  if (!confirm(`Reset pushed flags for ${MONTHS[calMonth]} ${calYear}?`)) return;
+  allMonthDeliveries().forEach(({p,d}) => delete pushed[pushKey(p.id,d)]);
+  save(); renderAll();
+}
+
+// ── RENDER CALENDAR ───────────────────────────────────────────
+function renderCal() {
+  const el = document.getElementById('tab-cal');
+  const map = monthDeliveries();
+  const all = allMonthDeliveries();
+  const f = new Date(calYear, calMonth, 1);
+  const dim = new Date(calYear, calMonth+1, 0).getDate();
+  const sd = f.getDay();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const unpushed = all.filter(({p,d}) => !pushed[pushKey(p.id,d)]).length;
+
+  let h = `<div class="stats">
+    <div class="stat"><div class="stat-label">Deliveries this month</div><div class="stat-val">${all.length}</div></div>
+    <div class="stat"><div class="stat-label" style="color:#854F0B">Payments due</div><div class="stat-val" style="color:#854F0B">${all.filter(({p}) => p.payment?.trim()).length}</div></div>
+    <div class="stat"><div class="stat-label" style="color:#2563eb">Not sent to Detrack</div><div class="stat-val" style="color:#2563eb">${unpushed}</div></div>
+  </div>
+  <div class="card">
+    <div class="cal-nav">
+      <button class="btn btn-sm" onclick="chgMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+      <div class="cal-month">${MONTHS[calMonth]} ${calYear}</div>
+      <button class="btn btn-sm" onclick="chgMonth(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+    <div class="cal-grid">`;
+
+  DAYS.forEach(d => { h += `<div class="cal-hdr">${d}</div>`; });
+  for (let i = 0; i < sd; i++) {
+    const pd = new Date(calYear, calMonth, -sd+i+1);
+    h += `<div class="cal-day other"><div class="cal-num">${pd.getDate()}</div></div>`;
+  }
+  for (let d = 1; d <= dim; d++) {
+    const dt = new Date(calYear, calMonth, d); dt.setHours(0,0,0,0);
+    const isToday = dt.getTime() === today.getTime();
+    const entries = map[dt.toDateString()] || [];
+    h += `<div class="cal-day${isToday?' today':''}"><div class="cal-num">${d}</div>`;
+    entries.forEach(({p, d: date}) => {
+      const hasPay = p.payment?.trim();
+      h += `<button class="pill${hasPay?' pay':''}" onclick="showDetail('${p.id}','${date.toISOString()}')">${p.firstName} ${p.lastName[0]}.</button>`;
+    });
+    h += `</div>`;
+  }
+  const trail = (7 - (sd + dim) % 7) % 7;
+  for (let i = 1; i <= trail; i++) h += `<div class="cal-day other"><div class="cal-num">${i}</div></div>`;
+  h += `</div></div>`;
+  el.innerHTML = h;
+}
+
+// ── RENDER PATIENTS ───────────────────────────────────────────
+function renderPts() {
+  const el = document.getElementById('tab-pts');
+  if (!patients.length) { el.innerHTML = `<div class="card"><div class="empty"><i class="ti ti-users"></i>No patients yet.</div></div>`; return; }
+  let h = `<div class="card"><table class="ptable"><thead><tr>
+    <th>Patient</th><th>Address</th><th>Phone</th><th>Frequency</th><th>Payment</th><th>Last delivery</th><th></th>
+  </tr></thead><tbody>`;
+  patients.forEach(p => {
+    const bc = p.freq === 'weekly' ? 'bw' : p.freq === 'biweekly' ? 'bb' : 'bm';
+    h += `<tr>
+      <td><strong>${p.firstName} ${p.lastName}</strong></td>
+      <td style="color:#6B7280;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.address}</td>
+      <td style="color:#6B7280">${p.phone||'—'}</td>
+      <td><span class="badge ${bc}">${p.freq}</span></td>
+      <td style="color:${p.payment?'#854F0B':'#9CA3AF'}">${p.payment||'—'}</td>
+      <td style="color:#6B7280">${p.lastDelivery||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" onclick="openEdit('${p.id}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm btn-red" onclick="delPt('${p.id}')" style="margin-left:4px"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`;
+  });
+  h += `</tbody></table></div>`;
+  el.innerHTML = h;
+}
+
+// ── RENDER DETRACK ────────────────────────────────────────────
+function renderDtk() {
+  const el = document.getElementById('tab-dtk');
+  const all = allMonthDeliveries();
+  if (!all.length) { el.innerHTML = `<div class="card"><div class="empty"><i class="ti ti-send"></i>No deliveries in ${MONTHS[calMonth]}.</div></div>`; return; }
+  const unpushed = all.filter(({p,d}) => !pushed[pushKey(p.id,d)]).length;
+  let h = `<div class="card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px"><i class="ti ti-send" style="color:#2563eb"></i> Push to Detrack — ${MONTHS[calMonth]} ${calYear}</div>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:1rem">Once pushed the button locks to prevent duplicate entries in Detrack.</p>
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem">
+      <button class="btn btn-blue" onclick="pushAll()"><i class="ti ti-send"></i> Push all unpushed (${unpushed})</button>
+      <button class="btn" onclick="resetPushed()"><i class="ti ti-refresh"></i> Reset pushed flags</button>
+    </div>`;
+
+  let curDate = '';
+  all.forEach(({p, d}) => {
+    const ds = d.toDateString();
+    if (ds !== curDate) {
+      if (curDate) h += '</div>';
+      curDate = ds;
+      h += `<div class="dday">${d.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'})}</div><div>`;
+    }
+    const key = pushKey(p.id, d);
+    const isPushed = !!pushed[key];
+    h += `<div class="drow">
+      <div style="flex:1">
+        <div class="dname">${p.firstName} ${p.lastName}</div>
+        <div class="ddetail">${p.address}${p.phone?' · '+p.phone:''}</div>
+        ${p.payment?`<div class="dpay"><i class="ti ti-credit-card" style="font-size:11px"></i> ${p.payment}</div>`:''}
+        ${p.notes?`<div class="ddetail" style="font-style:italic">${p.notes}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0">
+        ${isPushed?`<span class="pushed-badge"><i class="ti ti-check"></i> Pushed ${new Date(pushed[key].at).toLocaleDateString()}</span>`:''}
+        <button class="btn btn-blue btn-sm${isPushed?' done':''}" ${isPushed?'disabled':''} onclick="pushOne('${key}','${p.id}','${d.toISOString()}')">
+          ${isPushed?'<i class="ti ti-check"></i> Done':'<i class="ti ti-send"></i> Push'}
+        </button>
+      </div>
+    </div>`;
+  });
+  if (curDate) h += '</div>';
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+// ── PATIENT MODAL ─────────────────────────────────────────────
+function openAdd() { showModal(null); }
+function openEdit(id) { showModal(patients.find(x => x.id === id)); }
+
+function showModal(p) {
+  const isEdit = !!p;
+  const today = new Date().toISOString().split('T')[0];
+  p = p || { id:'', firstName:'', lastName:'', address:'', phone:'', payment:'', lastDelivery: today, freq:'weekly', notes:'' };
+  document.getElementById('modals').innerHTML = `
+  <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-title"><i class="ti ti-user-plus" style="color:#1D9E75"></i>${isEdit?'Edit patient':'Add new patient'}</div>
+      <div class="form-grid2">
+        <div><label>First name *</label><input id="mFN" value="${p.firstName}" placeholder="Jane"></div>
+        <div><label>Last name *</label><input id="mLN" value="${p.lastName}" placeholder="Smith"></div>
+      </div>
+      <div class="form-group"><label>Delivery address *</label><input id="mAddr" value="${p.address}" placeholder="123 Main St, Mississauga, ON"></div>
+      <div class="form-grid2">
+        <div><label>Phone number</label><input id="mPhone" value="${p.phone}" placeholder="(416) 555-0100"></div>
+        <div><label>Payment required</label><input id="mPay" value="${p.payment}" placeholder="e.g. $12.50 cash"></div>
+      </div>
+      <div class="form-grid2">
+        <div><label>Delivery frequency *</label>
+          <select id="mFreq">
+            <option value="weekly"${p.freq==='weekly'?' selected':''}>Weekly (every 7 days)</option>
+            <option value="biweekly"${p.freq==='biweekly'?' selected':''}>Biweekly (every 14 days)</option>
+            <option value="monthly"${p.freq==='monthly'?' selected':''}>Monthly (every 28 days)</option>
+          </select>
+        </div>
+        <div><label>Last delivery date *</label><input type="date" id="mLast" value="${p.lastDelivery}"></div>
+      </div>
+      <div class="form-group"><label>Special notes</label><textarea id="mNotes" placeholder="Buzzer code, dog at door, signature required...">${p.notes}</textarea></div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="savePt('${p.id}')">${isEdit?'Save changes':'Add patient'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function savePt(eid) {
+  const fn = document.getElementById('mFN').value.trim();
+  const ln = document.getElementById('mLN').value.trim();
+  const addr = document.getElementById('mAddr').value.trim();
+  const last = document.getElementById('mLast').value;
+  if (!fn||!ln||!addr||!last) { alert('Please fill in first name, last name, address, and last delivery date.'); return; }
+  const p = {
+    id: eid || (Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+    firstName: fn, lastName: ln, address: addr,
+    phone: document.getElementById('mPhone').value.trim(),
+    payment: document.getElementById('mPay').value.trim(),
+    freq: document.getElementById('mFreq').value,
+    lastDelivery: last,
+    notes: document.getElementById('mNotes').value.trim()
+  };
+  if (eid) { const i = patients.findIndex(x => x.id === eid); if (i>=0) patients[i]=p; else patients.push(p); }
+  else patients.push(p);
+  save(); closeModal(); renderAll();
+  toast(`${fn} ${ln} ${eid?'updated':'added'}`);
+}
+
+function delPt(id) {
+  const p = patients.find(x => x.id === id);
+  if (!p || !confirm(`Remove ${p.firstName} ${p.lastName}?`)) return;
+  patients = patients.filter(x => x.id !== id);
+  save(); renderAll();
+  toast(`${p.firstName} ${p.lastName} removed`);
+}
+
+function showDetail(pid, iso) {
+  const p = patients.find(x => x.id === pid);
+  if (!p) return;
+  const d = new Date(iso);
+  const key = pushKey(p.id, d);
+  const isPushed = pushed[key];
+  document.getElementById('modals').innerHTML = `
+  <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal" style="width:420px">
+      <div class="modal-title"><i class="ti ti-truck-delivery" style="color:#1D9E75"></i>Delivery — ${d.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'})}</div>
+      <div style="margin-bottom:1rem"><div style="font-size:17px;font-weight:600">${p.firstName} ${p.lastName}</div><div style="font-size:13px;color:#6B7280;margin-top:2px">${p.address}</div></div>
+      <table style="width:100%;font-size:13px;margin-bottom:1rem">
+        <tr><td style="color:#6B7280;padding:5px 0;width:110px">Phone</td><td>${p.phone||'—'}</td></tr>
+        <tr><td style="color:#6B7280;padding:5px 0">Payment</td><td style="color:${p.payment?'#854F0B':'inherit'}">${p.payment||'None'}</td></tr>
+        <tr><td style="color:#6B7280;padding:5px 0">Frequency</td><td>${p.freq}</td></tr>
+        ${p.notes?`<tr><td style="color:#6B7280;padding:5px 0;vertical-align:top">Notes</td><td>${p.notes}</td></tr>`:''}
+      </table>
+      ${isPushed?`<div style="background:#DCFCE7;color:#166534;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:1rem"><i class="ti ti-check"></i> Pushed to Detrack on ${new Date(isPushed.at).toLocaleDateString()}</div>`:''}
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Close</button>
+        ${!isPushed?`<button class="btn btn-blue" onclick="pushOne('${key}','${p.id}','${d.toISOString()}');closeModal()"><i class="ti ti-send"></i> Push to Detrack</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function closeModal() { document.getElementById('modals').innerHTML = ''; }
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['cal','pts','dtk'].forEach(t => { document.getElementById('tab-'+t).style.display = t===name?'block':'none'; });
+  renderAll();
+}
+
+function chgMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderAll();
+}
+
+function toast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr?' err':'');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className='', 3500);
+}
+
+function renderAll() { renderCal(); renderPts(); renderDtk(); }
+renderAll();
+</script>
+</body>
+</html>
