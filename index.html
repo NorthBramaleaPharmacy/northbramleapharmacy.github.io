@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,8 +190,7 @@ function buildPayload(p, date) {
       date: fmtDate(new Date(date)),
       do_number: pushKey(p.id, date),
       address: p.address,
-      first_name: p.firstName,
-      last_name: p.lastName,
+      deliver_to: p.firstName + ' ' + p.lastName,
       phone_number: p.phone || '',
       remarks: notes,
       type: 'Delivery'
