@@ -190,7 +190,7 @@ function buildPayload(p, date) {
       date: fmtDate(new Date(date)),
       do_number: pushKey(p.id, date),
       address: p.address,
-      deliver_to: p.firstName + ' ' + p.lastName,
+      deliver_to: p.lastName + ' ' + p.firstName,
       phone_number: p.phone || '',
       remarks: notes,
       type: 'Delivery'
