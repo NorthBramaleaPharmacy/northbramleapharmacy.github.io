@@ -86,6 +86,7 @@ textarea{resize:vertical;min-height:64px}
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <span style="font-size:11px;background:#DCFCE7;color:#166534;padding:3px 10px;border-radius:20px;font-weight:500"><i class="ti ti-plug-connected"></i> Detrack connected</span>
+    <button class="btn" onclick="openImport()" style="background:#7c3aed;border-color:#7c3aed;color:#fff"><i class="ti ti-download"></i> Import from Detrack</button>
     <button class="btn btn-primary" onclick="openAdd()"><i class="ti ti-plus"></i> Add patient</button>
   </div>
 </div>
@@ -492,6 +493,118 @@ function toast(msg, isErr=false) {
   t.className = 'show' + (isErr?' err':'');
   clearTimeout(t._t);
   t._t = setTimeout(() => t.className='', 3500);
+}
+
+function openImport() {
+  document.getElementById('modals').innerHTML = `
+  <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal" style="width:600px">
+      <div class="modal-title"><i class="ti ti-download" style="color:#7c3aed"></i>Import from Detrack</div>
+      <p style="font-size:13px;color:#6B7280;margin-bottom:1rem">This will fetch all currently scheduled patients from Detrack and import any new ones not already in NBP Deliveries. You can set frequency and last delivery date for each before saving.</p>
+      <div style="text-align:center;padding:1rem">
+        <button class="btn" style="background:#7c3aed;border-color:#7c3aed;color:#fff;font-size:14px;padding:10px 24px" onclick="fetchAndImport(this)">
+          <i class="ti ti-loader-2"></i> Fetch patients from Detrack
+        </button>
+      </div>
+      <div id="import-results"></div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="import-save-btn" style="display:none" onclick="saveImported()">Import selected patients</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+let importCandidates = [];
+
+async function fetchAndImport(btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Fetching...';
+  try {
+    let all = [];
+    let d = new Date();
+    const end = new Date(); end.setDate(end.getDate() + 60);
+    while (d <= end) {
+      const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      const r = await fetch('https://app.detrack.com/api/v2/dn/jobs?page=1&limit=100&date='+ds, {
+        headers: {'Content-Type':'application/json','X-API-KEY': DETRACK_KEY}
+      });
+      const j = await r.json();
+      if (j.data) all = all.concat(j.data.map(x => ({
+        firstName: x.deliver_to_collect_from || '',
+        lastName: x.last_name || '',
+        address: (x.address||'').replace(/\n/g,' ').trim(),
+        phone: x.phone_number || '',
+        date: ds
+      })));
+      d.setDate(d.getDate() + 1);
+      await new Promise(r => setTimeout(r, 50));
+    }
+    // Deduplicate by address
+    const seen = new Set();
+    const unique = all.filter(p => {
+      const k = p.address.toLowerCase().trim();
+      if (seen.has(k) || !k) return false;
+      seen.add(k); return true;
+    }).filter(p => p.firstName || p.lastName);
+    
+    // Filter out already existing patients
+    const existing = new Set(patients.map(p => p.address.toLowerCase().trim()));
+    importCandidates = unique.filter(p => !existing.has(p.address.toLowerCase().trim()));
+    
+    if (!importCandidates.length) {
+      document.getElementById('import-results').innerHTML = '<p style="text-align:center;color:#1D9E75;padding:1rem;font-weight:500">✓ All Detrack patients are already in NBP Deliveries!</p>';
+      btn.disabled = false; btn.innerHTML = 'Fetch again';
+      return;
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    let html = '<div style="margin-top:1rem"><div style="font-size:13px;font-weight:600;margin-bottom:.75rem">'+importCandidates.length+' new patients found — set frequency and last delivery date for each:</div>';
+    importCandidates.forEach((p, i) => {
+      html += '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      html += '<div style="font-weight:600;font-size:13px">'+p.firstName+' '+p.lastName+'</div>';
+      html += '<div style="font-size:11px;color:#6B7280;margin-bottom:8px">'+p.address+(p.phone?' · '+p.phone:'')+'</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      html += '<div><label style="font-size:11px;font-weight:500;color:#4B5563;display:block;margin-bottom:3px">Frequency</label>';
+      html += '<select id="imp-freq-'+i+'" style="width:100%;padding:6px 8px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px">';
+      html += '<option value="weekly">Weekly</option><option value="biweekly" selected>Biweekly</option><option value="monthly">Monthly</option>';
+      html += '</select></div>';
+      html += '<div><label style="font-size:11px;font-weight:500;color:#4B5563;display:block;margin-bottom:3px">Last delivery date</label>';
+      html += '<input type="date" id="imp-date-'+i+'" value="'+today+'" style="width:100%;padding:6px 8px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px"></div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('import-results').innerHTML = html;
+    document.getElementById('import-save-btn').style.display = 'inline-flex';
+    btn.disabled = false; btn.innerHTML = 'Fetch again';
+  } catch(e) {
+    document.getElementById('import-results').innerHTML = '<p style="color:#dc2626;padding:1rem">Error: '+e.message+'</p>';
+    btn.disabled = false; btn.innerHTML = 'Try again';
+  }
+}
+
+function saveImported() {
+  let count = 0;
+  importCandidates.forEach((p, i) => {
+    const freq = document.getElementById('imp-freq-'+i)?.value || 'biweekly';
+    const last = document.getElementById('imp-date-'+i)?.value || new Date().toISOString().split('T')[0];
+    patients.push({
+      id: Date.now().toString(36)+Math.random().toString(36).slice(2,5)+'_'+i,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      address: p.address,
+      phone: p.phone,
+      payment: '',
+      freq: freq,
+      lastDelivery: last,
+      notes: ''
+    });
+    count++;
+  });
+  save();
+  closeModal();
+  renderAll();
+  toast(count+' patients imported successfully!');
 }
 
 function renderAll() { renderCal(); renderPts(); renderDtk(); }
